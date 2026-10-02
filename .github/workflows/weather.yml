@@ -18,11 +18,13 @@ jobs:
           TEMP=$(echo "$DATA" | jq -r '.current.temperature_2m | round')
           CODE=$(echo "$DATA" | jq -r '.current.weather_code')
           case $CODE in
-            5[1-7]) OVERLAY=drizzle ;;
-            6[1-7]|8[0-2]) OVERLAY=rain ;;
-            7[1-7]|8[56]) OVERLAY=snow ;;
-            9[5-9]) OVERLAY=thunder ;;
-            *) OVERLAY=clear ;;
+            0) OVERLAY=clear; ICON=SUN_ID ;;
+            1|2|3) OVERLAY=clear; ICON=CLOUD_ID ;;
+            45|48) OVERLAY=clear; ICON=FOG_ID ;;
+            5[1-7]) OVERLAY=drizzle; ICON=RAIN_ID ;;
+            6[1-7]|8[0-2]) OVERLAY=rain; ICON=RAIN_ID ;;
+            7[1-7]|8[56]) OVERLAY=snow; ICON=SNOW_ID ;;
+            9[5-9]) OVERLAY=thunder; ICON=STORM_ID ;;
+            *) OVERLAY=clear; ICON=CLOUD_ID ;;
           esac
-          PAYLOAD=$(jq -nc --arg t "${TEMP}°C" --arg o "$OVERLAY" '{text:$t, overlay:$o, lifetime:2400}')
-          mosquitto_pub -h broker.hivemq.com -p 1883 -r -t "$PREFIX/custom/weather" -m "$PAYLOAD"
+          PAYLOAD=$(jq -nc --arg t "${TEMP}°C" --arg o "$OVERLAY" --arg i "$ICON" '{text:$t, icon:$i, overlay:$o, lifetime:2400}')
