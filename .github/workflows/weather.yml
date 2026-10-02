@@ -18,13 +18,11 @@ jobs:
           TEMP=$(echo "$DATA" | jq -r '.current.temperature_2m | round')
           CODE=$(echo "$DATA" | jq -r '.current.weather_code')
           case $CODE in
-            0) OVERLAY=clear; ICON=73 ;;
-            1|2|3) OVERLAY=clear; ICON=73 ;;
-            45|48) OVERLAY=clear; ICON=73 ;;
-            5[1-7]) OVERLAY=drizzle; ICON=73 ;;
-            6[1-7]|8[0-2]) OVERLAY=rain; ICON=73 ;;
-            7[1-7]|8[56]) OVERLAY=snow; ICON=73 ;;
-            9[5-9]) OVERLAY=thunder; ICON=73 ;;
-            *) OVERLAY=clear; ICON=73 ;;
+            5[1-7]) OVERLAY=drizzle ;;
+            6[1-7]|8[0-2]) OVERLAY=rain ;;
+            7[1-7]|8[56]) OVERLAY=snow ;;
+            9[5-9]) OVERLAY=thunder ;;
+            *) OVERLAY=clear ;;
           esac
+          ICON=73
           PAYLOAD=$(jq -nc --arg t "${TEMP}°C" --arg o "$OVERLAY" --arg i "$ICON" '{text:$t, icon:$i, overlay:$o, lifetime:2400}')
