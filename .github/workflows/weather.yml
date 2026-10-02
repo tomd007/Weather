@@ -26,3 +26,5 @@ jobs:
           esac
           ICON=73
           PAYLOAD=$(jq -nc --arg t "${TEMP}°C" --arg o "$OVERLAY" --arg i "$ICON" '{text:$t, icon:$i, overlay:$o, lifetime:2400}')
+          echo "$PAYLOAD"
+          mosquitto_pub -h broker.hivemq.com -p 1883 -r -t "$PREFIX/custom/weather" -m "$PAYLOAD"
