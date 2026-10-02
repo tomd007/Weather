@@ -1,0 +1,28 @@
+name: Clock weather
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send weather to clock
+        env:
+          PREFIX: ${{ secrets.AWTRIX_PREFIX }}
+          LAT: ${{ secrets.LAT }}
+          LON: ${{ secrets.LON }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq mosquitto-clients jq
+          DATA=$(curl -s "https://api.open-meteo.com/v1/forecast?latitude=$LAT&longitude=$LON&current=temperature_2m,weather_code")
+          TEMP=$(echo "$DATA" | jq -r '.current.temperature_2m | round')
+          CODE=$(echo "$DATA" | jq -r '.current.weather_code')
+          case $CODE in
+            5[1-7]) OVERLAY=drizzle ;;
+            6[1-7]|8[0-2]) OVERLAY=rain ;;
+            7[1-7]|8[56]) OVERLAY=snow ;;
+            9[5-9]) OVERLAY=thunder ;;
+            *) OVERLAY=clear ;;
+          esac
+          PAYLOAD=$(jq -nc --arg t "${TEMP}°C" --arg o "$OVERLAY" '{text:$t, overlay:$o, lifetime:2400}')
+          mosquitto_pub -h broker.hivemq.com -p 1883 -r -t "$PREFIX/custom/weather" -m "$PAYLOAD"
